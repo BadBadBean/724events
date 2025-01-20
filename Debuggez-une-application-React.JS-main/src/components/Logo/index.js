@@ -2,6 +2,8 @@
 import PropTypes from "prop-types";
 import "./style.scss";
 
+// Midification des propriétés de style fontFamily, fontSize, fontWeight et whiteSpace
+
 const Logo = ({ size }) => (
   <div className="Logo">
     <svg
