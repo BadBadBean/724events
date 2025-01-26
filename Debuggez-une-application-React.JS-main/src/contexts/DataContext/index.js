@@ -5,6 +5,7 @@ import {
   useContext,
   useEffect,
   useState,
+  useMemo,
 } from "react";
 
 const DataContext = createContext({});
@@ -19,26 +20,39 @@ export const api = {
 export const DataProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [data, setData] = useState(null);
+  const [last, setLast] = useState(null);
+
   const getData = useCallback(async () => {
     try {
-      setData(await api.loadData());
+      const fetchedData = await api.loadData();
+      setData(fetchedData);
+
+      // Récupérer l'évènement le plus récent
+      if (fetchedData && fetchedData.events) {
+        const sortedEvents = fetchedData.events.sort((a, b) => 
+          new Date(b.date) - new Date(a.date)
+        );
+        setLast(sortedEvents[0]);
+      }
     } catch (err) {
       setError(err);
     }
   }, []);
+
   useEffect(() => {
     if (data) return;
     getData();
-  });
+  }, [data, getData]);
   
+  // Utiliser useMemo pour effectuer un rendu uniquement lorsque les valeurs changent
+  const contextValue = useMemo(() => ({
+    data,
+    error,
+    last,
+  }), [data, error, last]);
+
   return (
-    <DataContext.Provider
-      // eslint-disable-next-line react/jsx-no-constructed-context-values
-      value={{
-        data,
-        error,
-      }}
-    >
+    <DataContext.Provider value={contextValue}>
       {children}
     </DataContext.Provider>
   );
